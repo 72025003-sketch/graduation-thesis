@@ -21,16 +21,16 @@ graph TD
     subgraph "Crew Network (192.168.5.0/24)"
         FW1[FW1] --- FW2
         FW1 --- CrewPC[Crew PC]
-        FW1 --- C2[C2 Server (Kali)]
+        FW1 --- C2["C2 Server (Kali)"]
     end
     
     subgraph "Business Network (192.168.10.0/24)"
-        FW2[FW2] --- LogServer[LOG Server<br>(Target)]
+        FW2[FW2] --- LogServer["LOG Server<br>(Target)"]
     end
     
     subgraph "Navigation Network (192.168.20.0/24)"
         FW2 --- GPS[GPS/AIS Sim]
-        FW2 --- OpenCPN[OpenCPN<br>(ECDIS)]
+        FW2 --- OpenCPN["OpenCPN<br>(ECDIS)"]
         GPS -->|NMEA| OpenCPN
     end
 ```
