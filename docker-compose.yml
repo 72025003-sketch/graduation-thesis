@@ -64,11 +64,9 @@ services:
         ipv4_address: 192.168.5.1
       dmz_nw:
         ipv4_address: 10.254.0.1
-    volumes:
-      - ./docker/router/fw1-startup.sh:/startup.sh:ro
     sysctls:
       - net.ipv4.ip_forward=1
-    command: ["/bin/sh", "/startup.sh"]
+    command: ["/bin/sh", "/fw1-startup.sh"]
     restart: unless-stopped
 
   # FW2: CrewNW ⟷ Business NW ⟷ Navi NW
@@ -90,11 +88,9 @@ services:
         ipv4_address: 192.168.10.1
       navi_nw:
         ipv4_address: 192.168.20.1
-    volumes:
-      - ./docker/router/fw2-startup.sh:/startup.sh:ro
     sysctls:
       - net.ipv4.ip_forward=1
-    command: ["/bin/sh", "/startup.sh"]
+    command: ["/bin/sh", "/fw2-startup.sh"]
     restart: unless-stopped
 
   # ========================================
