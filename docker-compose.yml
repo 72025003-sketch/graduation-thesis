@@ -1,0 +1,214 @@
+# 船舶ネットワーク Docker環境
+# GPSスプーフィング攻撃シミュレーション用
+
+networks:
+  # Internet（模擬）
+  internet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1
+
+  # CrewNW - 乗組員ネットワーク
+  crew_nw:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.5.0/24
+          gateway: 192.168.5.253  # fw1(.1)との競合回避
+
+  # Business NW - ビジネスネットワーク
+  business_nw:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
+          gateway: 192.168.10.253 # fw2(.1)との競合回避
+
+  # Navi NW - 航海機器ネットワーク
+  navi_nw:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.20.0/24
+          gateway: 192.168.20.253 # fw2(.1)との競合回避
+
+services:
+  # ========================================
+  # ルータ/ファイアウォール
+  # ========================================
+  
+  # FW1: Internet ⟷ CrewNW
+  fw1:
+    build:
+      context: ./docker/router
+      dockerfile: Dockerfile
+    container_name: fw1
+    image: seigotakeda/fw1:latest
+    hostname: fw1
+    cap_add:
+      - NET_ADMIN
+    networks:
+      internet:
+        ipv4_address: 192.168.1.254
+      crew_nw:
+        ipv4_address: 192.168.5.1
+    volumes:
+      - ./docker/router/fw1-startup.sh:/startup.sh:ro
+    sysctls:
+      - net.ipv4.ip_forward=1
+    command: ["/bin/sh", "/startup.sh"]
+    restart: unless-stopped
+
+  # FW2: CrewNW ⟷ Business NW ⟷ Navi NW
+  fw2:
+    build:
+      context: ./docker/router
+      dockerfile: Dockerfile
+    container_name: fw2
+    image: seigotakeda/fw2:latest
+    hostname: fw2
+    cap_add:
+      - NET_ADMIN
+    networks:
+      crew_nw:
+        ipv4_address: 192.168.5.254
+      business_nw:
+        ipv4_address: 192.168.10.1
+      navi_nw:
+        ipv4_address: 192.168.20.1
+    volumes:
+      - ./docker/router/fw2-startup.sh:/startup.sh:ro
+    sysctls:
+      - net.ipv4.ip_forward=1
+    command: ["/bin/sh", "/startup.sh"]
+    restart: unless-stopped
+
+  # ========================================
+  # CrewNW - 乗組員ネットワーク
+  # ========================================
+
+  # c2-server: 攻撃元サーバー（Kali Linux）
+  c2-server:
+    build:
+      context: ./docker/c2-kali
+      dockerfile: Dockerfile
+    container_name: c2-server
+    image: seigotakeda/c2-server:latest
+    hostname: c2-server
+    cap_add:
+      - NET_ADMIN # ルーティング変更用
+    ports:
+      - "7681:7681"
+    networks:
+      crew_nw:
+        ipv4_address: 192.168.5.30
+    volumes:
+      - ./docker/c2-kali/attack_log_server.sh:/opt/attack_log_server.sh:ro
+      - ./docker/c2-kali/passwords.txt:/opt/passwords.txt:ro
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # CrewPC: 一般的な乗組員用PC
+  crew-pc:
+    build:
+      context: ./docker/crew-hosts
+      dockerfile: Dockerfile
+    container_name: crew-pc
+    image: seigotakeda/crew-pc:latest
+    hostname: crew-pc
+    cap_add:
+      - NET_ADMIN # ルーティング変更用
+    networks:
+      crew_nw:
+        ipv4_address: 192.168.5.50
+    command: ["/bin/sh", "-c", "ip route del default && ip route add default via 192.168.5.1 && tail -f /dev/null"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # ========================================
+  # Business NW - ビジネスネットワーク
+  # ========================================
+
+  # LOG server: 脆弱なSSH + NMEA送信機能
+  log-server:
+    build:
+      context: ./docker/log-server
+      dockerfile: Dockerfile
+    container_name: log-server
+    image: seigotakeda/log-server:latest
+    hostname: log-server
+    cap_add:
+      - NET_ADMIN # ルーティング変更用
+    networks:
+      business_nw:
+        ipv4_address: 192.168.10.20
+    volumes:
+      - ./docker/log-server/inject_nmea.py:/opt/inject_nmea.py:ro
+    command: ["/bin/bash", "-c", "/setup_ssh.sh && tail -f /dev/null"]
+    restart: unless-stopped
+
+  # ========================================
+  # Navi NW - 航海機器ネットワーク
+  # ========================================
+
+  # GPS/AIS シミュレータ
+  gps-ais:
+    build:
+      context: ./docker/navi-devices/gps-ais
+      dockerfile: Dockerfile
+    container_name: gps-ais
+    image: seigotakeda/gps-ais:latest
+    hostname: gps-ais
+    cap_add:
+      - NET_ADMIN # ルーティング変更用
+    networks:
+      navi_nw:
+        ipv4_address: 192.168.20.11
+    volumes:
+      - ./docker/navi-devices/gps-ais/gps_ais_simulator.py:/app/gps_ais_simulator.py:ro
+    command: ["/bin/sh", "-c", "ip route del default && ip route add default via 192.168.20.1 && python3 /app/gps_ais_simulator.py"]
+    restart: unless-stopped
+
+  # OpenCPN: 海図プロッタ（ECDIS）
+  opencpn:
+    build:
+      context: ./docker/navi-devices/opencpn
+      dockerfile: Dockerfile
+    container_name: opencpn
+    image: seigotakeda/opencpn:latest
+    hostname: opencpn
+    ports:
+      - "6080:6080"
+    networks:
+      navi_nw:
+        ipv4_address: 192.168.20.20
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+
+  # ========================================
+  # Web Application
+  # ========================================
+
+  # Dashboard
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    container_name: webapp
+    image: seigotakeda/webapp:latest
+    hostname: webapp
+    ports:
+      - "3000:3000"
+    networks:
+      business_nw:
+        ipv4_address: 192.168.10.50
+    cap_add:
+      - NET_ADMIN
+    user: root
+    command: ["/bin/sh", "-c", "ip route add 192.168.20.0/24 via 192.168.10.1 && node server.js"]
+    restart: unless-stopped

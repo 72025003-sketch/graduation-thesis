@@ -1,0 +1,3 @@
+# OpenCPN Config (Ignore runtime artifacts, keep config)
+navi-devices/opencpn/config/*
+!navi-devices/opencpn/config/opencpn.conf
