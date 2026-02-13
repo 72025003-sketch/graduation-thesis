@@ -34,6 +34,14 @@ networks:
         - subnet: 192.168.20.0/24
           gateway: 192.168.20.253 # fw2(.1)との競合回避
 
+  # DMZ NW - FW間接続用ネットワーク
+  dmz_nw:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.254.0.0/24
+          gateway: 10.254.0.254 # Gateway is not used by FWs but required for definition
+
 services:
   # ========================================
   # ルータ/ファイアウォール
@@ -54,6 +62,8 @@ services:
         ipv4_address: 192.168.1.254
       crew_nw:
         ipv4_address: 192.168.5.1
+      dmz_nw:
+        ipv4_address: 10.254.0.1
     volumes:
       - ./docker/router/fw1-startup.sh:/startup.sh:ro
     sysctls:
@@ -72,8 +82,10 @@ services:
     cap_add:
       - NET_ADMIN
     networks:
-      crew_nw:
-        ipv4_address: 192.168.5.254
+      # crew_nw:  <-- Removed, connection via DMZ
+      #   ipv4_address: 192.168.5.254
+      dmz_nw:
+        ipv4_address: 10.254.0.2
       business_nw:
         ipv4_address: 192.168.10.1
       navi_nw:
