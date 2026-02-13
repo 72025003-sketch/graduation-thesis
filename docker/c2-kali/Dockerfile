@@ -3,7 +3,8 @@ FROM kalilinux/kali-rolling:latest
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
-    kali-linux-headless \
+    hydra \
+    fping \
     iputils-ping \
     iproute2 \
     net-tools \
