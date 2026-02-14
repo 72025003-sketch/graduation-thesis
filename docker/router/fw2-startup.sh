@@ -13,9 +13,6 @@ NAVI_IF=$(ip -4 addr show | grep '192.168.20.1' | awk '{print $NF}')
 
 echo "FW2 Detected: DMZ=$DMZ_IF, Business=$BIZ_IF, Navi=$NAVI_IF"
 
-# IPフォワーディング有効化
-sysctl -w net.ipv4.ip_forward=1
-
 # iptablesのデフォルトポリシー設定
 iptables -P FORWARD DROP
 iptables -P INPUT ACCEPT
