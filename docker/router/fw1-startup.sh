@@ -11,9 +11,6 @@ DMZ_IF=$(ip -4 addr show | grep '10.254.0.1' | awk '{print $NF}')
 
 echo "FW1 Detected: WAN=$WAN_IF, LAN=$LAN_IF, DMZ=$DMZ_IF"
 
-# IPフォワーディング有効化
-sysctl -w net.ipv4.ip_forward=1
-
 # iptablesのデフォルトポリシー設定
 iptables -P FORWARD DROP
 iptables -P INPUT ACCEPT
