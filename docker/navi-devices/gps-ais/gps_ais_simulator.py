@@ -62,7 +62,7 @@ def simulate_voyage():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     
     target_ip = "192.168.20.255"
-    target_port = 60001
+    target_port = 10110
     
     print("========================================")
     print("GPS/AIS シミュレータ起動")

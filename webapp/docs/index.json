@@ -1,0 +1,18 @@
+{
+  "title": "Red Team Exercise",
+  "sections": [
+    {
+      "label": "00. 環境セットアップ",
+      "children": [
+        { "label": "ツールのインストール", "path": "00_setup/01_install.md" }
+      ]
+    },
+    {
+      "label": "01. Log-Server 攻撃",
+      "children": [
+        { "label": "偵察・ブルートフォース", "path": "01_attack/01_log_server.md" },
+        { "label": "GPS スプーフィング",     "path": "01_attack/02_gps_spoof.md" }
+      ]
+    }
+  ]
+}

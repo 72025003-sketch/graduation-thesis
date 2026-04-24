@@ -1,32 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Maritime Cybersecurity Red Team Exercise</title>
-  <meta name="description" content="A practical maritime cybersecurity red team exercise targeting shipboard OT systems to evaluate detection and response capabilities through realistic attack simulations.">
+  <meta name="description"
+    content="A practical maritime cybersecurity red team exercise targeting shipboard OT systems.">
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <main class="main">
-    <div class="grid">
+  <div class="layout">
+
+    <!-- 左カラム：上下 2 iframe -->
+    <div class="left-col">
       <div class="panel">
         <h2>OpenCPN</h2>
-        <iframe
-          src="__OPENCPN_URL__"
-          class="iframe"
-          title="OpenCPN"
-        ></iframe>
+        <iframe src="__OPENCPN_URL__" class="iframe" title="OpenCPN"></iframe>
       </div>
       <div class="panel">
         <h2>c2-server Terminal</h2>
-        <iframe
-          src="__C2_URL__"
-          class="iframe"
-          title="c2-server Terminal"
-        ></iframe>
+        <iframe src="__C2_URL__" class="iframe" title="c2-server Terminal"></iframe>
       </div>
     </div>
-  </main>
+
+    <!-- 右カラム：指示書サイドバー -->
+    <div class="right-col">
+      <div class="sidebar">
+
+        <!-- ナビゲーション -->
+        <div class="sidebar-nav" id="nav">
+          <p class="loading">読み込み中...</p>
+        </div>
+
+        <!-- MD 本文 -->
+        <div class="sidebar-content" id="guide">
+          <p class="placeholder">← 左のメニューから手順を選択してください</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="marked.min.js"></script>
+  <script>
+    const INDEX_URL = 'docs/index.json';
+
+    // ── パス解決 ──────────────────────────────────
+    function resolvePath(base, rel) {
+      if (rel.startsWith('http')) return rel;
+      const stack = base.split('/').filter(Boolean);
+      stack.pop(); // ファイル名を除去
+      rel.split('/').forEach(p => {
+        if (p === '..') stack.pop();
+        else if (p !== '.') stack.push(p);
+      });
+      return stack.join('/');
+    }
+
+    // ── ドキュメント読み込み ──────────────────────
+    async function loadDoc(path) {
+      // アクティブ状態を更新
+      document.querySelectorAll('.nav-link').forEach(a => {
+        a.classList.toggle('active', a.dataset.path === path);
+      });
+
+      const guide = document.getElementById('guide');
+      guide.innerHTML = '<p class="loading">読み込み中...</p>';
+
+      try {
+        // cache:'no-cache' でブラウザキャッシュを無視して常に最新を取得
+        const res = await fetch(path, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const md = await res.text();
+
+        // リンクをSPA遷移に変換
+        const currentPath = path;
+        const instance = new marked.Marked();
+        instance.use({
+          renderer: {
+            link(token) {
+              const href = token.href || '';
+              const text = token.text || token.raw || '(link)';
+              // 外部リンクはそのまま新タブで開く
+              if (!href || href.startsWith('http') || href.startsWith('mailto:')) {
+                return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+              }
+              // 内部リンクは href="#" にして JS で処理
+              const resolved = resolvePath(currentPath, href);
+              return `<a href="#" class="doc-link" data-path="${resolved}">${text}</a>`;
+            }
+          }
+        });
+
+        guide.innerHTML = instance.parse(md);
+        guide.scrollTop = 0;
+
+      } catch (e) {
+        console.error("Load error:", e);
+        guide.innerHTML = `<p class="error">ドキュメントの読み込みに失敗しました<br><code>${path}</code><br><br><small style="color:#f38ba8;">${e.message}</small></p>`;
+      }
+    }
+
+    // ── ナビゲーション生成 ────────────────────────
+    async function buildNav() {
+      const nav = document.getElementById('nav');
+      try {
+        const res = await fetch(INDEX_URL, { cache: 'no-cache' });
+        const data = await res.json();
+
+        // SVG アイコン定義（インライン・環境差なし）
+        const ICON_BOOK   = `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+        const ICON_FOLDER = `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+        const ICON_FILE   = `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+
+        let html = `<div class="nav-title">${ICON_BOOK} ${data.title}</div>`;
+
+        data.sections.forEach(section => {
+          html += `<div class="nav-section">`;
+          html += `<div class="nav-section-label">${ICON_FOLDER} ${section.label}</div>`;
+          html += `<ul>`;
+          section.children.forEach(item => {
+            const fullPath = `docs/${item.path}`;
+            html += `<li><a href="#" class="nav-link" data-path="${fullPath}">${ICON_FILE} ${item.label}</a></li>`;
+          });
+          html += `</ul></div>`;
+        });
+
+        nav.innerHTML = html;
+
+        // 最初のドキュメントを自動表示
+        const first = data.sections[0]?.children[0];
+        if (first) loadDoc(`docs/${first.path}`);
+
+      } catch (e) {
+        nav.innerHTML = `<p class="error">index.json の読み込みに失敗しました</p>`;
+      }
+    }
+
+    // ── クリックイベント（委譲） ──────────────────
+    document.addEventListener('click', e => {
+      const link = e.target.closest('.nav-link, .doc-link');
+      if (link) {
+        e.preventDefault();
+        loadDoc(link.dataset.path);
+      }
+    });
+
+    // ── 初期化 ────────────────────────────────────
+    buildNav();
+  </script>
 </body>
+
 </html>

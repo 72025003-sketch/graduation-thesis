@@ -1,67 +1,279 @@
-/* リセット */
-*,
-*::before,
-*::after {
+/* ── リセット ─────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
 
-/* html/body を画面いっぱいに */
-html,
-body {
+/* SVG アイコン共通（絵文字の代替・環境差なし） */
+.nav-icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  position: relative;
+  top: -1px;
+}
+
+html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: monospace;
-  background-color: #1a1a1a;
-  color: #fff;
+  font-family: 'Segoe UI', monospace, sans-serif;
+  background: #0f0f13;
+  color: #cdd6f4;
 }
 
-/* メインコンテナ */
-.main {
+/* ── 全体レイアウト（案 C：左列 上下 + 右サイドバー） ── */
+.layout {
+  display: flex;
+  height: 100vh;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+/* ── 左カラム（上下 2 分割） ─────────────────── */
+.left-col {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 1rem;
+  flex: 3;          /* 横幅比 3:2 */
+  gap: 0.5rem;
+  min-width: 0;
 }
 
-/* 2カラムグリッド */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  flex-grow: 1;
-  /* overflow を防ぐため min-height: 0 が必須 */
-  min-height: 0;
-}
-
-/* 各パネル */
 .panel {
   display: flex;
   flex-direction: column;
-  background-color: #2a2a2a;
+  flex: 1;
+  min-height: 0;
+  background: #1e1e2e;
+  border: 1px solid #313244;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #333;
-  min-height: 0;
 }
 
 .panel h2 {
-  margin: 0;
-  padding: 0.5rem 1rem;
-  background-color: #333;
-  font-size: 1.2rem;
-  border-bottom: 1px solid #444;
-  /* タイトル行が縮まないよう固定 */
+  padding: 0.4rem 0.8rem;
+  background: #181825;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #89b4fa;
+  border-bottom: 1px solid #313244;
   flex-shrink: 0;
 }
 
-/* iframe を残りの高さいっぱいに広げる */
 .iframe {
   flex-grow: 1;
   width: 100%;
   border: none;
-  background-color: #000;
+  background: #000;
   min-height: 0;
+}
+
+/* ── 右カラム（サイドバー全体） ─────────────── */
+.right-col {
+  flex: 2;          /* 横幅比 3:2 */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e2e;
+  border: 1px solid #313244;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ── ナビゲーション部 ────────────────────────── */
+.sidebar-nav {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #313244;
+  overflow-y: auto;
+  max-height: 38%;
+  flex-shrink: 0;
+  background: #181825;
+}
+
+.nav-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #cba6f7;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.nav-section {
+  margin-bottom: 0.6rem;
+}
+
+.nav-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #89b4fa;
+  padding: 0.15rem 0;
+  letter-spacing: 0.03em;
+}
+
+.nav-section ul {
+  list-style: none;
+  padding-left: 1.1rem;
+  margin-top: 0.2rem;
+}
+
+.nav-section li {
+  margin: 0.1rem 0;
+}
+
+.nav-link {
+  display: block;
+  color: #a6adc8;
+  text-decoration: none;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+  background: #2a2a3e;
+  color: #cdd6f4;
+}
+
+.nav-link.active {
+  background: #313244;
+  color: #cba6f7;
+  font-weight: 600;
+}
+
+/* ── MD 本文エリア ────────────────────────────── */
+.sidebar-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+  min-height: 0;
+  line-height: 1.65;
+}
+
+/* MD レンダリングスタイル */
+.sidebar-content h1 {
+  font-size: 1.1rem;
+  color: #cba6f7;
+  border-bottom: 1px solid #313244;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.sidebar-content h2 {
+  font-size: 0.95rem;
+  color: #89b4fa;
+  margin: 1.2rem 0 0.4rem;
+}
+
+.sidebar-content h3 {
+  font-size: 0.85rem;
+  color: #a6e3a1;
+  margin: 1rem 0 0.3rem;
+}
+
+.sidebar-content p {
+  font-size: 0.78rem;
+  color: #cdd6f4;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-content code {
+  background: #313244;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.72rem;
+  color: #f38ba8;
+}
+
+.sidebar-content pre {
+  background: #11111b;
+  border: 1px solid #313244;
+  border-left: 3px solid #89b4fa;
+  border-radius: 6px;
+  padding: 0.75rem 0.9rem;
+  overflow-x: auto;
+  margin: 0.6rem 0;
+}
+
+.sidebar-content pre code {
+  background: none;
+  color: #cdd6f4;
+  font-size: 0.71rem;
+  padding: 0;
+}
+
+.sidebar-content ul,
+.sidebar-content ol {
+  padding-left: 1.3rem;
+  font-size: 0.78rem;
+  color: #cdd6f4;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-content li {
+  margin: 0.2rem 0;
+}
+
+.sidebar-content blockquote {
+  border-left: 3px solid #cba6f7;
+  margin: 0.6rem 0;
+  padding: 0.3rem 0.8rem;
+  background: #2a2a3e;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.78rem;
+  color: #a6adc8;
+}
+
+.sidebar-content a,
+.sidebar-content .doc-link {
+  color: #89b4fa;
+  text-decoration: underline;
+  font-size: 0.78rem;
+}
+
+.sidebar-content .doc-link {
+  cursor: pointer;
+}
+
+.sidebar-content .doc-link:hover {
+  color: #cba6f7;
+}
+
+.sidebar-content hr {
+  border: none;
+  border-top: 1px solid #313244;
+  margin: 0.8rem 0;
+}
+
+/* ── ユーティリティ ───────────────────────────── */
+.loading {
+  color: #585b70;
+  font-size: 0.78rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.placeholder {
+  color: #45475a;
+  font-size: 0.78rem;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.error {
+  color: #f38ba8;
+  font-size: 0.78rem;
+  text-align: center;
+  margin-top: 2rem;
 }
