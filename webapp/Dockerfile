@@ -1,42 +1,24 @@
-FROM node:20-alpine AS base
+# ────────────────────────────────────────────────
+# nginx:alpine ベースの軽量静的ファイルサーバー
+# ・Node.js / npm / ビルドステップは一切不要
+# ・entrypoint.sh が環境変数を sed で index.html に注入する
+# ────────────────────────────────────────────────
+FROM nginx:alpine
 
-# Install dependencies only when needed
-FROM base AS deps
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+# iproute2 を追加（ip route コマンドに必要）
+RUN apk add --no-cache iproute2
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
+# Nginx 設定を配置
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-ENV NODE_ENV=production
+# 静的ファイルを配置
+COPY index.html /usr/share/nginx/html/index.html
+COPY style.css  /usr/share/nginx/html/style.css
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# エントリポイントスクリプトを配置して実行権限を付与
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-COPY --from=builder /app/public ./public
+EXPOSE 80
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+ENTRYPOINT ["/entrypoint.sh"]

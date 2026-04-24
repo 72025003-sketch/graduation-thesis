@@ -10,6 +10,10 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     vim \
     curl \
+    nmap \
+    traceroute \
+    nano \
+    openssh-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

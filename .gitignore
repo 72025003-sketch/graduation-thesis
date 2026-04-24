@@ -17,3 +17,6 @@ __pycache__/
 venv/
 .venv/
 env/
+
+# 報告書（git 管理対象外）
+webapp_migration_report.md
