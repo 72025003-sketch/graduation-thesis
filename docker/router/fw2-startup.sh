@@ -34,7 +34,6 @@ iptables -A FORWARD -i $NAVI_IF -o $NAVI_IF -s 192.168.20.0/24 -d 192.168.20.0/2
 echo "=== FW2 設定完了 ==="
 echo "DMZ ($DMZ_IF): 10.254.0.2"
 echo "Business NW ($BIZ_IF): 192.168.10.1"
-echo "Business NW ($BIZ_IF): 192.168.10.1"
 echo "Navi NW ($NAVI_IF): 192.168.20.1"
 
 # デフォルトゲートウェイをFW1(DMZ)に向ける
