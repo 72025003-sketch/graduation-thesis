@@ -26,6 +26,7 @@ RUN pip3 install pynmea2
 
 # Pythonスクリプトコピー
 COPY inject_nmea.py /home/admin/inject_nmea.py
+COPY ais_spoof.py   /home/admin/ais_spoof.py
 
 # 初期化スクリプトコピー
 COPY setup_ssh.sh /setup_ssh.sh
