@@ -1,11 +1,12 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
-RUN apt-get update \
-&&  apt-get install -y software-properties-common \
-&&  add-apt-repository --yes ppa:opencpn/opencpn \
-&&  apt-get update \
-&&  apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     opencpn \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     x11vnc \
     xvfb \
     fluxbox \
@@ -14,7 +15,7 @@ RUN apt-get update \
     net-tools \
     supervisor \
     iproute2 \
-&&  rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
 
 # noVNC用のリンク作成
 RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
