@@ -4,6 +4,7 @@
     {
       "label": "00. 環境セットアップ",
       "children": [
+        { "label": "船内ネットワークの構成", "path": "00_setup/00_network.md" },
         { "label": "ツールのインストール", "path": "00_setup/01_install.md" }
       ]
     },
