@@ -1,10 +1,10 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
 RUN apt-get update \
-&&  apt-get install -y software-properties-common \
-&&  add-apt-repository --yes ppa:opencpn/opencpn \
-&&  apt-get update \
-&&  apt-get install -y \
+    &&  apt-get install -y software-properties-common \
+    &&  add-apt-repository --yes ppa:opencpn/opencpn \
+    &&  apt-get update \
+    &&  apt-get install -y \
     opencpn \
     x11vnc \
     xvfb \
@@ -14,7 +14,7 @@ RUN apt-get update \
     net-tools \
     supervisor \
     iproute2 \
-&&  rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+    &&  rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
 # noVNC用のリンク作成
 RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
